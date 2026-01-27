@@ -2,13 +2,16 @@ import { NavLink } from "react-router-dom";
 import "../styles/navigation.css";
 
 const links = [
-  { to: "/", label: "Dashboard" },
-  { to: "/onboarding", label: "Onboarding" },
-  { to: "/transactions", label: "Log" },
-  { to: "/missions", label: "Missions" },
-  { to: "/shop", label: "Shop" },
-  { to: "/inbox", label: "Inbox" },
-  { to: "/admin", label: "Counselor Admin" }
+  { to: "/", label: "Guild Hall" },
+  { to: "/onboarding", label: "Initiation" },
+  { to: "/transactions", label: "Coin Ledger" },
+  { to: "/missions", label: "Contracts" },
+  { to: "/budgets", label: "Monthly Quests" },
+  { to: "/shop", label: "Armory" },
+  { to: "/insights", label: "Forge Insights" },
+  { to: "/achievements", label: "Achievements" },
+  { to: "/inbox", label: "Raven Post" },
+  { to: "/admin", label: "War Room" }
 ];
 
 export default function Navigation() {

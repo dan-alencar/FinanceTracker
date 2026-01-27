@@ -3,16 +3,19 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 32px;
-  background: rgba(12, 15, 28, 0.9);
+  background: rgba(18, 21, 34, 0.92);
   position: sticky;
   top: 0;
   backdrop-filter: blur(12px);
   z-index: 10;
+  border-bottom: 1px solid rgba(184, 121, 61, 0.25);
 }
 
 .nav-brand {
   font-weight: 700;
   font-size: 20px;
+  font-family: var(--font-display);
+  color: var(--accent);
 }
 
 .nav-links {

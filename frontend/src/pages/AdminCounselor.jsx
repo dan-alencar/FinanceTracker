@@ -12,7 +12,7 @@ export default function AdminCounselor() {
 
   return (
     <div>
-      <h1 className="page-title">Counselor Admin Tool</h1>
+      <h1 className="page-title">War Room Console</h1>
       <p className="subtitle">Wizard-of-Oz message console for admins.</p>
 
       <div className="grid grid-2">

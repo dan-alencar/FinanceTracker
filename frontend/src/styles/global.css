@@ -1,14 +1,11 @@
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;600;700&display=swap");
+
+@import "./tokens.css";
+
 :root {
-  color-scheme: dark;
-  font-family: "Inter", system-ui, sans-serif;
-  background-color: #0f111a;
+  font-family: var(--font-body);
+  background-color: var(--bg);
   color: #f5f5f5;
-  --card: #1b1f2e;
-  --card-muted: #242a3b;
-  --accent: #f2b950;
-  --accent-2: #7dd3fc;
-  --success: #34d399;
-  --danger: #f97316;
 }
 
 * {
@@ -18,7 +15,23 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at top, #1f2335, #0f111a 60%);
+  background: radial-gradient(circle at top, #1f2335, var(--bg) 60%);
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.18;
+  background-image: linear-gradient(
+      120deg,
+      rgba(255, 255, 255, 0.06),
+      rgba(0, 0, 0, 0.2)
+    ),
+    url("https://www.transparenttextures.com/patterns/asfalt-dark.png");
+  mix-blend-mode: screen;
 }
 
 a {
@@ -36,6 +49,8 @@ main {
   font-size: 28px;
   font-weight: 700;
   margin-bottom: 12px;
+  font-family: var(--font-display);
+  letter-spacing: 0.5px;
 }
 
 .subtitle {
@@ -76,11 +91,14 @@ main {
   cursor: pointer;
   background: var(--accent);
   color: #1b1401;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 8px 16px rgba(242, 185, 80, 0.2);
 }
 
 .button.secondary {
   background: var(--card-muted);
   color: #e2e8f0;
+  box-shadow: none;
 }
 
 .input {
@@ -99,8 +117,166 @@ main {
   font-size: 12px;
 }
 
+.tag.alert {
+  border: 1px solid rgba(242, 185, 80, 0.3);
+}
+
+.tag.alert.warning {
+  border-color: rgba(249, 115, 22, 0.6);
+  color: #fbbf24;
+}
+
 .list {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.category-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 6px;
+  color: var(--accent);
+}
+
+.category-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.budget-row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.budget-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.budget-progress {
+  display: grid;
+  gap: 8px;
+}
+
+.award-list {
+  margin-top: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.insight-row {
+  display: grid;
+  gap: 8px;
+}
+
+.toggle-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.loadout-grid {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.toast {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(242, 185, 80, 0.18);
+  border: 1px solid rgba(242, 185, 80, 0.4);
+  animation: banner-pop 0.6s ease;
+}
+
+.toast.sparkle {
+  animation: sparkle 0.8s ease;
+}
+
+.clink {
+  margin-top: 12px;
+  color: var(--accent);
+  font-weight: 600;
+  animation: clink 0.6s ease;
+}
+
+.achievement {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(27, 31, 46, 0.7);
+}
+
+.achievement.unlocked {
+  border: 1px solid rgba(242, 185, 80, 0.4);
+}
+
+.inventory-slot {
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(36, 42, 59, 0.6);
+}
+
+.inventory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.inventory-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.discrete-mode .toast,
+.discrete-mode .clink,
+.discrete-mode .button {
+  animation: none;
+  transition: none;
+}
+
+@keyframes clink {
+  0% {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes banner-pop {
+  0% {
+    transform: scale(0.96);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes sparkle {
+  0% {
+    box-shadow: 0 0 0 rgba(242, 185, 80, 0.1);
+  }
+  100% {
+    box-shadow: 0 0 24px rgba(242, 185, 80, 0.4);
+  }
 }
