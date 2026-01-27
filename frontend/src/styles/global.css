@@ -1,0 +1,106 @@
+:root {
+  color-scheme: dark;
+  font-family: "Inter", system-ui, sans-serif;
+  background-color: #0f111a;
+  color: #f5f5f5;
+  --card: #1b1f2e;
+  --card-muted: #242a3b;
+  --accent: #f2b950;
+  --accent-2: #7dd3fc;
+  --success: #34d399;
+  --danger: #f97316;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #1f2335, #0f111a 60%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+main {
+  padding: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.subtitle {
+  color: #cbd5f5;
+  margin-bottom: 24px;
+}
+
+.grid {
+  display: grid;
+  gap: 20px;
+}
+
+.grid-2 {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(242, 185, 80, 0.2);
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.button {
+  border: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--accent);
+  color: #1b1401;
+}
+
+.button.secondary {
+  background: var(--card-muted);
+  color: #e2e8f0;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #2f364f;
+  background: #131627;
+  color: #e2e8f0;
+}
+
+.tag {
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #2b3148;
+  font-size: 12px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
