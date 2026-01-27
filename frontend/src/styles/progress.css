@@ -1,0 +1,23 @@
+.progress {
+  display: grid;
+  gap: 6px;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #cbd5f5;
+}
+
+.progress-track {
+  height: 10px;
+  border-radius: 999px;
+  background: #2a314a;
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f2b950, #f97316);
+}
