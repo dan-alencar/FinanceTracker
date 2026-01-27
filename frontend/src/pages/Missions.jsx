@@ -3,9 +3,10 @@ import Card from "../components/Card";
 import { useGameStore } from "../store/useGameStore";
 
 export default function Missions() {
-  const { missions, addMission, completeMission } = useGameStore();
+  const { missions, addMission, completeMission, settings } = useGameStore();
   const [title, setTitle] = useState("");
   const [targetAmount, setTargetAmount] = useState("100");
+  const [showToast, setShowToast] = useState(false);
 
   const handleCreate = () => {
     const success = addMission({
@@ -22,9 +23,17 @@ export default function Missions() {
     }
   };
 
+  const handleComplete = (missionId) => {
+    completeMission(missionId);
+    if (!settings.discreteMode) {
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 900);
+    }
+  };
+
   return (
     <div>
-      <h1 className="page-title">Missions</h1>
+      <h1 className="page-title">Contracts</h1>
       <p className="subtitle">Create up to 3 active goals.</p>
 
       <div className="grid grid-2">
@@ -45,7 +54,7 @@ export default function Missions() {
           </button>
         </Card>
 
-        <Card title="Active Missions" subtitle="Progress tracker">
+        <Card title="Active Contracts" subtitle="Progress tracker">
           <div className="list">
             {missions.map((mission) => (
               <div key={mission.id} className="tag">
@@ -55,7 +64,7 @@ export default function Missions() {
                   {mission.status === "active" ? (
                     <button
                       className="button secondary"
-                      onClick={() => completeMission(mission.id)}
+                      onClick={() => handleComplete(mission.id)}
                     >
                       Complete
                     </button>
@@ -65,6 +74,9 @@ export default function Missions() {
                 </div>
               </div>
             ))}
+            {showToast && !settings.discreteMode && (
+              <div className="toast">Contract honored! Banner raised.</div>
+            )}
           </div>
         </Card>
       </div>

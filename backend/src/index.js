@@ -3,6 +3,12 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import { createClient } from "@supabase/supabase-js";
+import createBudgetsRouter from "./routes/budgets.js";
+import createInventoryRouter from "./routes/inventory.js";
+import createStatsRouter from "./routes/stats.js";
+import createAchievementsRouter from "./routes/achievements.js";
+import { applyTransactionRewards } from "./services/gameState.js";
+import { unlockAchievement } from "./services/achievements.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -13,6 +19,7 @@ app.use(morgan("dev"));
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+const adminKey = process.env.ADMIN_API_KEY;
 const supabase = supabaseUrl && supabaseServiceKey
   ? createClient(supabaseUrl, supabaseServiceKey)
   : null;
@@ -34,6 +41,28 @@ const requireUser = (req, res) => {
     return null;
   }
   return userId;
+};
+
+const requireAdmin = (req, res) => {
+  if (!adminKey) {
+    res.status(501).json({ error: "Admin API key not configured." });
+    return false;
+  }
+  const token = req.header("x-admin-key");
+  if (!token || token !== adminKey) {
+    res.status(403).json({ error: "Admin key required." });
+    return false;
+  }
+  return true;
+};
+
+const getUserTimezone = async (userId) => {
+  const { data } = await supabase
+    .from("profiles")
+    .select("settings, timezone")
+    .eq("id", userId)
+    .single();
+  return data?.timezone || data?.settings?.timezone || "America/Sao_Paulo";
 };
 
 app.get("/health", (_req, res) => {
@@ -134,7 +163,31 @@ app.post("/transactions", async (req, res) => {
     return;
   }
 
-  res.status(201).json({ transaction: data });
+  const timezone = await getUserTimezone(userId);
+  const gameState = await applyTransactionRewards(supabase, userId, timezone);
+
+  const { count } = await supabase
+    .from("transactions")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId);
+
+  if (count === 1) {
+    await unlockAchievement(supabase, userId, "first-log");
+  }
+
+  if (gameState?.streak_count >= 3) {
+    await unlockAchievement(supabase, userId, "steady-hand");
+  }
+
+  if (gameState?.streak_count >= 7) {
+    await unlockAchievement(supabase, userId, "streak-7");
+  }
+
+  if (count >= 50) {
+    await unlockAchievement(supabase, userId, "guild-treasurer");
+  }
+
+  res.status(201).json({ transaction: data, gameState });
 });
 
 app.get("/transactions", async (req, res) => {
@@ -257,18 +310,56 @@ app.post("/shop/buy", async (req, res) => {
   if (!userId) return;
 
   const { shopItemId } = req.body;
-  const { data, error } = await supabase
-    .from("purchases")
+  const { data: item, error: itemError } = await supabase
+    .from("shop_items")
+    .select("id, price_gold")
+    .eq("id", shopItemId)
+    .single();
+
+  if (itemError || !item) {
+    res.status(400).json({ error: itemError?.message || "Invalid item" });
+    return;
+  }
+
+  const { data: gameState } = await supabase
+    .from("game_state")
+    .select("gold")
+    .eq("user_id", userId)
+    .single();
+
+  if (!gameState || gameState.gold < item.price_gold) {
+    res.status(400).json({ error: "Insufficient gold" });
+    return;
+  }
+
+  const { data: inventoryItem, error: inventoryError } = await supabase
+    .from("inventory")
     .insert({ user_id: userId, shop_item_id: shopItemId })
     .select("*")
     .single();
 
-  if (error) {
-    res.status(400).json({ error: error.message });
+  if (inventoryError) {
+    res.status(400).json({ error: inventoryError.message });
     return;
   }
 
-  res.status(201).json({ purchase: data });
+  await supabase.from("purchases").insert({ user_id: userId, shop_item_id: shopItemId });
+
+  await supabase
+    .from("game_state")
+    .update({ gold: gameState.gold - item.price_gold })
+    .eq("user_id", userId);
+
+  const { count } = await supabase
+    .from("inventory")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId);
+
+  if (count >= 5) {
+    await unlockAchievement(supabase, userId, "armory-collector");
+  }
+
+  res.status(201).json({ inventory: inventoryItem });
 });
 
 app.get("/counselor/messages", async (req, res) => {
@@ -314,6 +405,7 @@ app.post("/counselor/messages/:id/read", async (req, res) => {
 
 app.post("/admin/counselor/send", async (req, res) => {
   if (!requireSupabase(res)) return;
+  if (!requireAdmin(req, res)) return;
 
   const { userId, title, body, adminId } = req.body;
   const { data, error } = await supabase
@@ -358,6 +450,11 @@ app.post("/events", async (req, res) => {
 
   res.status(201).json({ event: data });
 });
+
+app.use("/budgets", createBudgetsRouter({ supabase }));
+app.use("/", createInventoryRouter({ supabase }));
+app.use("/stats", createStatsRouter({ supabase }));
+app.use("/achievements", createAchievementsRouter({ supabase }));
 
 app.listen(PORT, () => {
   console.log(`Dwarven Guild backend running on ${PORT}`);

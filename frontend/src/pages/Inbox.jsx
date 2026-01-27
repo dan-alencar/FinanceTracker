@@ -6,7 +6,7 @@ export default function Inbox() {
 
   return (
     <div>
-      <h1 className="page-title">Guild Counselor Inbox</h1>
+      <h1 className="page-title">Raven Post</h1>
       <p className="subtitle">Messages sent by the Wizard-of-Oz counselor.</p>
 
       <div className="grid grid-2">

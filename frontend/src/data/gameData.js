@@ -38,6 +38,7 @@ export const shopItems = [
     id: "axe-skin",
     name: "Obsidian Axe",
     category: "Weapon",
+    slot: "tool",
     price: 120,
     assetUrl: "https://placehold.co/100x100?text=Axe"
   },
@@ -45,6 +46,7 @@ export const shopItems = [
     id: "hood",
     name: "Shadow Hood",
     category: "Headgear",
+    slot: "helmet",
     price: 90,
     assetUrl: "https://placehold.co/100x100?text=Hood"
   },
@@ -52,6 +54,7 @@ export const shopItems = [
     id: "shield",
     name: "Titan Shield",
     category: "Shield",
+    slot: "tool",
     price: 140,
     assetUrl: "https://placehold.co/100x100?text=Shield"
   },
@@ -59,6 +62,7 @@ export const shopItems = [
     id: "boots",
     name: "Swift Boots",
     category: "Boots",
+    slot: "accessory",
     price: 70,
     assetUrl: "https://placehold.co/100x100?text=Boots"
   },
@@ -66,6 +70,7 @@ export const shopItems = [
     id: "cape",
     name: "Aurora Cape",
     category: "Cape",
+    slot: "cloak",
     price: 110,
     assetUrl: "https://placehold.co/100x100?text=Cape"
   },
@@ -73,6 +78,7 @@ export const shopItems = [
     id: "hammer",
     name: "Solar Hammer",
     category: "Weapon",
+    slot: "tool",
     price: 150,
     assetUrl: "https://placehold.co/100x100?text=Hammer"
   },
@@ -80,6 +86,7 @@ export const shopItems = [
     id: "pet",
     name: "Stone Golem Pet",
     category: "Companion",
+    slot: "accessory",
     price: 200,
     assetUrl: "https://placehold.co/100x100?text=Pet"
   },
@@ -87,6 +94,7 @@ export const shopItems = [
     id: "ring",
     name: "Guild Ring",
     category: "Accessory",
+    slot: "accessory",
     price: 60,
     assetUrl: "https://placehold.co/100x100?text=Ring"
   },
@@ -94,6 +102,7 @@ export const shopItems = [
     id: "gloves",
     name: "Forge Gloves",
     category: "Gloves",
+    slot: "accessory",
     price: 80,
     assetUrl: "https://placehold.co/100x100?text=Gloves"
   },
@@ -101,8 +110,48 @@ export const shopItems = [
     id: "banner",
     name: "Victory Banner",
     category: "Decoration",
+    slot: "background",
     price: 130,
     assetUrl: "https://placehold.co/100x100?text=Banner"
+  }
+];
+
+export const achievements = [
+  {
+    code: "first-log",
+    name: "First Log",
+    description: "Record your very first expense.",
+    title: "Rookie Scribe"
+  },
+  {
+    code: "streak-7",
+    name: "7-Day Streak",
+    description: "Log expenses seven days in a row.",
+    title: "Streak Warden"
+  },
+  {
+    code: "budget-keeper",
+    name: "Budget Keeper",
+    description: "Stay within three monthly budgets.",
+    title: "Keeper of Coin"
+  },
+  {
+    code: "guild-treasurer",
+    name: "Guild Treasurer",
+    description: "Reach 50 total transactions.",
+    title: "Guild Treasurer"
+  },
+  {
+    code: "armory-collector",
+    name: "Armory Collector",
+    description: "Own five cosmetics from the Armory.",
+    title: "Armory Curator"
+  },
+  {
+    code: "steady-hand",
+    name: "Steady Hand",
+    description: "Maintain a 3-day streak.",
+    title: "Steady Hand"
   }
 ];
 
