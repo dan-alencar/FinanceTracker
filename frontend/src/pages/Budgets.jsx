@@ -5,8 +5,10 @@ import CategoryIcon from "../components/CategoryIcon";
 import { categories } from "../data/gameData";
 import { getCurrentMonth, getPreviousMonth } from "../lib/dateUtils";
 import { useGameStore } from "../store/useGameStore";
+import { useTranslation } from "react-i18next";
 
 export default function Budgets() {
+  const { t } = useTranslation();
   const {
     budgets,
     transactions,
@@ -42,14 +44,12 @@ export default function Budgets() {
 
   return (
     <div>
-      <h1 className="page-title">Monthly Quests</h1>
-      <p className="subtitle">
-        Set a spending limit per category to earn monthly bonus rewards.
-      </p>
+      <h1 className="page-title">{t("budgets.title")}</h1>
+      <p className="subtitle">{t("budgets.subtitle")}</p>
 
       <div className="grid grid-2">
-        <Card title="Quest Settings" subtitle="Edit your monthly limits">
-          <label className="tag">Month (YYYY-MM)</label>
+        <Card title={t("budgets.settings")} subtitle={t("budgets.editLimits")}>
+          <label className="tag">{t("budgets.month")}</label>
           <input
             className="input"
             value={month}
@@ -70,7 +70,7 @@ export default function Budgets() {
                     onChange={(event) =>
                       handleBudgetChange(category, event.target.value)
                     }
-                    placeholder="Limit (R$)"
+                    placeholder={t("budgets.limit")}
                   />
                 </div>
               );
@@ -80,11 +80,11 @@ export default function Budgets() {
             className="button secondary"
             onClick={() => finalizeBudgets(previousMonth)}
           >
-            Finalize {previousMonth}
+            {t("budgets.finalize", { month: previousMonth })}
           </button>
         </Card>
 
-        <Card title="Quest Progress" subtitle={`Tracking for ${month}`}>
+        <Card title={t("budgets.progress")} subtitle={t("budgets.tracking", { month })}>
           <div className="list">
             {categories.map((category) => {
               const budget = monthBudgets.find((entry) => entry.category === category);
@@ -103,7 +103,7 @@ export default function Budgets() {
                   </div>
                   <ProgressBar
                     value={Number.isFinite(percent) ? percent : 0}
-                    label="Quest Meter"
+                    label={t("budgets.questMeter")}
                   />
                 </div>
               );
@@ -111,7 +111,7 @@ export default function Budgets() {
           </div>
           {budgetAwards.length > 0 && (
             <div className="award-list">
-              <p className="subtitle">Recent rewards forged</p>
+              <p className="subtitle">{t("budgets.recentRewards")}</p>
               {budgetAwards.slice(-3).map((award) => (
                 <span key={`${award.month}-${award.category}`} className="badge">
                   {award.category} · {award.month}

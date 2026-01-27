@@ -1,8 +1,10 @@
 import { useState } from "react";
 import Card from "../components/Card";
 import { useGameStore } from "../store/useGameStore";
+import { useTranslation } from "react-i18next";
 
 export default function Missions() {
+  const { t } = useTranslation();
   const { missions, addMission, completeMission, settings } = useGameStore();
   const [title, setTitle] = useState("");
   const [targetAmount, setTargetAmount] = useState("100");
@@ -11,7 +13,7 @@ export default function Missions() {
   const handleCreate = () => {
     const success = addMission({
       id: `m-${Date.now()}`,
-      title: title || "New Mission",
+      title: title || t("missions.newMission"),
       targetAmount: Number(targetAmount) || 0,
       currentAmount: 0,
       status: "active",
@@ -33,14 +35,14 @@ export default function Missions() {
 
   return (
     <div>
-      <h1 className="page-title">Contracts</h1>
-      <p className="subtitle">Create up to 3 active goals.</p>
+      <h1 className="page-title">{t("missions.title")}</h1>
+      <p className="subtitle">{t("missions.subtitle")}</p>
 
       <div className="grid grid-2">
-        <Card title="Create Mission" subtitle="Max 3 active">
+        <Card title={t("missions.create")} subtitle={t("missions.maxActive")}>
           <input
             className="input"
-            placeholder="Goal title"
+            placeholder={t("missions.goalTitle")}
             value={title}
             onChange={(event) => setTitle(event.target.value)}
           />
@@ -50,11 +52,11 @@ export default function Missions() {
             onChange={(event) => setTargetAmount(event.target.value)}
           />
           <button className="button" onClick={handleCreate}>
-            Add Mission
+            {t("missions.add")}
           </button>
         </Card>
 
-        <Card title="Active Contracts" subtitle="Progress tracker">
+        <Card title={t("missions.active")} subtitle={t("missions.progress")}>
           <div className="list">
             {missions.map((mission) => (
               <div key={mission.id} className="tag">
@@ -66,16 +68,16 @@ export default function Missions() {
                       className="button secondary"
                       onClick={() => handleComplete(mission.id)}
                     >
-                      Complete
+                      {t("missions.complete")}
                     </button>
                   ) : (
-                    <span className="badge">Completed</span>
+                    <span className="badge">{t("missions.completed")}</span>
                   )}
                 </div>
               </div>
             ))}
             {showToast && !settings.discreteMode && (
-              <div className="toast">Contract honored! Banner raised.</div>
+              <div className="toast">{t("missions.toast")}</div>
             )}
           </div>
         </Card>

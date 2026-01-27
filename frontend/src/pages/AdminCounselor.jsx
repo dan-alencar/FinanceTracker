@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Card from "../components/Card";
+import { useTranslation } from "react-i18next";
 
 const mockUsers = [
   { id: "u-1", name: "Aria", lastActivity: "2024-05-14", streak: 3 },
@@ -7,26 +8,27 @@ const mockUsers = [
 ];
 
 export default function AdminCounselor() {
-  const [title, setTitle] = useState("Guild Tip");
-  const [body, setBody] = useState("Log your next expense to keep the streak alive.");
+  const { t } = useTranslation();
+  const [title, setTitle] = useState(() => t("admin.defaultTitle"));
+  const [body, setBody] = useState(() => t("admin.defaultBody"));
 
   return (
     <div>
-      <h1 className="page-title">War Room Console</h1>
-      <p className="subtitle">Wizard-of-Oz message console for admins.</p>
+      <h1 className="page-title">{t("admin.title")}</h1>
+      <p className="subtitle">{t("admin.subtitle")}</p>
 
       <div className="grid grid-2">
-        <Card title="Users" subtitle="Recent activity">
+        <Card title={t("admin.users")} subtitle={t("admin.recentActivity")}>
           <div className="list">
             {mockUsers.map((user) => (
               <div key={user.id} className="tag">
-                {user.name} · Last: {user.lastActivity} · Streak {user.streak}
+                {user.name} · {t("admin.last")}: {user.lastActivity} · {t("admin.streak")} {user.streak}
               </div>
             ))}
           </div>
         </Card>
 
-        <Card title="Send Message">
+        <Card title={t("admin.sendMessage")}>
           <input
             className="input"
             value={title}
@@ -38,7 +40,7 @@ export default function AdminCounselor() {
             value={body}
             onChange={(event) => setBody(event.target.value)}
           />
-          <button className="button">Send to Guild</button>
+          <button className="button">{t("admin.sendGuild")}</button>
         </Card>
       </div>
     </div>
