@@ -4,13 +4,15 @@ import ProgressBar from "../components/ProgressBar";
 import CategoryIcon from "../components/CategoryIcon";
 import { categories } from "../data/gameData";
 import { useGameStore } from "../store/useGameStore";
+import { useTranslation } from "react-i18next";
 
 const ranges = [
-  { id: "7d", label: "Last 7 days", days: 7 },
-  { id: "30d", label: "Last 30 days", days: 30 }
+  { id: "7d", labelKey: "insights.range7", days: 7 },
+  { id: "30d", labelKey: "insights.range30", days: 30 }
 ];
 
 export default function Insights() {
+  const { t } = useTranslation();
   const { transactions } = useGameStore();
   const [range, setRange] = useState("7d");
 
@@ -48,8 +50,8 @@ export default function Insights() {
 
   return (
     <div>
-      <h1 className="page-title">Forge Insights</h1>
-      <p className="subtitle">Quick breakdown of your recent coin flow.</p>
+      <h1 className="page-title">{t("insights.title")}</h1>
+      <p className="subtitle">{t("insights.subtitle")}</p>
 
       <div className="toggle-group">
         {ranges.map((option) => (
@@ -58,23 +60,29 @@ export default function Insights() {
             className={range === option.id ? "button" : "button secondary"}
             onClick={() => setRange(option.id)}
           >
-            {option.label}
+            {t(option.labelKey)}
           </button>
         ))}
       </div>
 
       <div className="grid grid-2" style={{ marginTop: 16 }}>
-        <Card title="Summary" subtitle="Recent spend snapshot">
+        <Card title={t("insights.summary")} subtitle={t("insights.snapshot")}>
           <div className="list">
-            <div className="tag">Total Spend: R$ {summary.totalSpend}</div>
-            <div className="tag">Transactions: {summary.txCount}</div>
             <div className="tag">
-              Top Category: {summary.topCategory || "None"}
+              {t("insights.totalSpend", { value: summary.totalSpend })}
+            </div>
+            <div className="tag">
+              {t("insights.transactions", { count: summary.txCount })}
+            </div>
+            <div className="tag">
+              {t("insights.topCategory", {
+                category: summary.topCategory || t("insights.none")
+              })}
             </div>
           </div>
         </Card>
 
-        <Card title="Category Breakdown" subtitle="Spend by category">
+        <Card title={t("insights.breakdown")} subtitle={t("insights.spendByCategory")}>
           <div className="list">
             {categories.map((category) => {
               const amount = summary.totalsByCategory[category] || 0;
@@ -88,7 +96,7 @@ export default function Insights() {
                     <span>{category}</span>
                     <span className="tag">R$ {amount}</span>
                   </div>
-                  <ProgressBar value={percent} label="Share" />
+                  <ProgressBar value={percent} label={t("insights.share")} />
                 </div>
               );
             })}
