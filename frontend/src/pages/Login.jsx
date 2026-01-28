@@ -13,8 +13,10 @@ export default function Login() {
   const navigate = useNavigate();
   const { profile } = useGameStore();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  const [mode, setMode] = useState("login");
 
   useEffect(() => {
     let active = true;
@@ -41,7 +43,7 @@ export default function Login() {
     };
   }, [navigate, profile]);
 
-  const handleGoogle = async () => {
+  const handleAuth = async () => {
     setError("");
     setStatus("");
     localStorage.removeItem("dg_demo");
@@ -49,36 +51,23 @@ export default function Login() {
       setError(t("login.missingSupabase"));
       return;
     }
-    const { error: signInError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: window.location.origin
-      }
-    });
-    if (signInError) {
-      setError(t("login.error"));
+    if (!email || !password) {
+      setError(t("login.missingFields"));
+      return;
     }
-  };
 
-  const handleMagicLink = async () => {
-    setError("");
-    setStatus("");
-    localStorage.removeItem("dg_demo");
-    if (!supabase) {
-      setError(t("login.missingSupabase"));
-      return;
-    }
-    const { error: signInError } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: window.location.origin
-      }
-    });
-    if (signInError) {
+    const authCall =
+      mode === "signup"
+        ? supabase.auth.signUp({ email, password })
+        : supabase.auth.signInWithPassword({ email, password });
+
+    const { error: authError } = await authCall;
+    if (authError) {
       setError(t("login.error"));
       return;
     }
-    setStatus(t("login.success"));
+
+    setStatus(mode === "signup" ? t("login.signupSuccess") : t("login.success"));
   };
 
   const handleDemo = () => {
@@ -97,10 +86,22 @@ export default function Login() {
       <div className="grid grid-2 login-grid">
         <Card title={t("login.title")} subtitle={t("login.subtitle")}>
           <div className="login-actions">
-            <button className="button" onClick={handleGoogle}>
-              {t("login.google")}
-            </button>
-            <div className="login-divider">{t("login.or")}</div>
+            <div className="toggle-group">
+              <button
+                type="button"
+                className={mode === "login" ? "button" : "button secondary"}
+                onClick={() => setMode("login")}
+              >
+                {t("login.signIn")}
+              </button>
+              <button
+                type="button"
+                className={mode === "signup" ? "button" : "button secondary"}
+                onClick={() => setMode("signup")}
+              >
+                {t("login.signUp")}
+              </button>
+            </div>
             <label className="tag" htmlFor="login-email">
               {t("login.emailLabel")}
             </label>
@@ -112,8 +113,19 @@ export default function Login() {
               onChange={(event) => setEmail(event.target.value)}
               placeholder="hero@guild.com"
             />
-            <button className="button secondary" onClick={handleMagicLink}>
-              {t("login.sendLink")}
+            <label className="tag" htmlFor="login-password">
+              {t("login.passwordLabel")}
+            </label>
+            <input
+              id="login-password"
+              className="input"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="********"
+            />
+            <button className="button" onClick={handleAuth}>
+              {mode === "signup" ? t("login.createAccount") : t("login.signIn")}
             </button>
             <button className="button ghost" onClick={handleDemo}>
               {t("login.demo")}

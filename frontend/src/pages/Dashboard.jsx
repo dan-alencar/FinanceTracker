@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import Card from "../components/Card";
 import ProgressBar from "../components/ProgressBar";
 import CategoryIcon from "../components/CategoryIcon";
@@ -5,6 +6,7 @@ import AvatarRenderer from "../components/AvatarRenderer";
 import { getCurrentMonth } from "../lib/dateUtils";
 import { useGameStore } from "../store/useGameStore";
 import { useTranslation } from "react-i18next";
+import { apiFetch } from "../lib/apiClient";
 
 export default function Dashboard() {
   const { t } = useTranslation();
@@ -21,7 +23,17 @@ export default function Dashboard() {
     notifications,
     shopItems
   } = useGameStore();
-  const recent = transactions.slice(0, 3);
+  const [summary, setSummary] = useState({ balances: [], missions: [], transactions: [] });
+  const [summaryError, setSummaryError] = useState("");
+  const recent =
+    summary.transactions?.length > 0
+      ? summary.transactions.slice(0, 3).map((entry) => ({
+          id: entry.id,
+          category: entry.category,
+          note: entry.description,
+          amount: entry.kind === "expense" ? -entry.amount_cents / 100 : entry.amount_cents / 100
+        }))
+      : transactions.slice(0, 3);
   const healthScore = Math.min(100, Math.round(gameState.streakCount * 12 + 40));
   const currentMonth = getCurrentMonth(settings.timezone);
   const monthBudgets = budgets.filter((budget) => budget.month === currentMonth);
@@ -37,6 +49,19 @@ export default function Dashboard() {
     slot,
     item: shopItems.find((entry) => entry.id === itemId)
   }));
+  const checkingBalance =
+    summary.balances.find((entry) => entry.account_type === "checking")
+      ?.available_cents ?? 0;
+  const savingsBalance =
+    summary.balances.find((entry) => entry.account_type === "savings")
+      ?.available_cents ?? 0;
+  const activeMissions = summary.missions.filter((mission) => mission.status === "active");
+
+  useEffect(() => {
+    apiFetch("/api/finance/summary")
+      .then((data) => setSummary(data))
+      .catch((err) => setSummaryError(err.message));
+  }, []);
 
   return (
     <div>
@@ -47,7 +72,7 @@ export default function Dashboard() {
 
       <div className="grid grid-3">
         <Card title={t("dashboard.balance")} subtitle={t("dashboard.currentBalance")}>
-          <strong>R$ {profile.startingBalance + gameState.gold}</strong>
+          <strong>R$ {(checkingBalance / 100).toFixed(2)}</strong>
           <span className="tag">
             {t("dashboard.goldTag", { gold: gameState.gold })}
           </span>
@@ -59,6 +84,10 @@ export default function Dashboard() {
         <Card title={t("dashboard.streak")} subtitle={t("dashboard.dailyQuests")}>
           <strong>{t("dashboard.streakDays", { days: gameState.streakCount })}</strong>
           <ProgressBar value={healthScore} label={t("dashboard.financialHealth")} />
+        </Card>
+        <Card title={t("dashboard.savings")} subtitle={t("dashboard.savingsSubtitle")}>
+          <strong>R$ {(savingsBalance / 100).toFixed(2)}</strong>
+          <span className="tag">{t("dashboard.savingsTag")}</span>
         </Card>
       </div>
 
@@ -168,6 +197,39 @@ export default function Dashboard() {
           </div>
         </Card>
       </div>
+
+      <Card
+        title={t("dashboard.savingsGoals")}
+        subtitle={t("dashboard.savingsGoalsSubtitle")}
+        style={{ marginTop: 24 }}
+      >
+        <div className="list">
+          {activeMissions.length === 0 && (
+            <span className="tag">{t("dashboard.noActiveMissions")}</span>
+          )}
+          {activeMissions.map((mission) => {
+            const percent = mission.target_cents
+              ? Math.min(
+                  100,
+                  Math.round((mission.saved_cents / mission.target_cents) * 100)
+                )
+              : 0;
+            return (
+              <div key={mission.id} className="budget-progress">
+                <div className="budget-label">
+                  <span>{mission.title}</span>
+                  <span className="tag">
+                    R$ {(mission.saved_cents / 100).toFixed(2)} /{" "}
+                    {(mission.target_cents / 100).toFixed(2)}
+                  </span>
+                </div>
+                <ProgressBar value={percent} label={t("dashboard.questMeter")} />
+              </div>
+            );
+          })}
+        </div>
+        {summaryError && <div className="badge error">{summaryError}</div>}
+      </Card>
 
       <Card
         title={t("dashboard.forgeAlerts")}

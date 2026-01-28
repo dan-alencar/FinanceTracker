@@ -15,14 +15,17 @@
   "login": {
     "title": "Enter the Guild",
     "subtitle": "Forge your coin trail.",
-    "google": "Continue with Google",
-    "or": "or",
     "emailLabel": "Email",
-    "sendLink": "Send magic link",
+    "passwordLabel": "Password",
+    "signIn": "Sign in",
+    "signUp": "Create account",
+    "createAccount": "Create account",
     "demo": "Continue as Demo",
-    "success": "Check your inbox for a login link.",
+    "success": "Signed in. Redirecting...",
     "error": "Unable to start login. Try again.",
     "missingSupabase": "Supabase is not configured for this environment.",
+    "missingFields": "Email and password are required.",
+    "signupSuccess": "Account created. Check your inbox to confirm."
     "pitchTitle": "Dwarven Guild",
     "pitchSubtitle": "Pitch-ready auth flow",
     "pitchBulletOne": "XP and gold tied to verified sessions.",
@@ -34,6 +37,9 @@
     "welcome": "Welcome, {{name}}. Keep your coin trail glowing.",
     "balance": "Balance",
     "currentBalance": "Current gold balance",
+    "savings": "Vault",
+    "savingsSubtitle": "Reserved savings",
+    "savingsTag": "Savings balance",
     "xpLevel": "XP & Level",
     "adventureProgress": "Adventure progress",
     "streak": "Streak",
@@ -64,7 +70,10 @@
     "alertSubtitle": "Budget warnings and counselor tips",
     "recentTransactions": "Recent Transactions",
     "lastLogged": "Last logged expenses",
-    "loadoutSlots": "Loadout Slots"
+    "loadoutSlots": "Loadout Slots",
+    "savingsGoals": "Savings Goals",
+    "savingsGoalsSubtitle": "Tracked mission deposits",
+    "noActiveMissions": "No active missions yet."
   },
   "shop": {
     "title": "Armory",
@@ -91,17 +100,24 @@
     "step2Subtitle": "Five appearances",
     "step3Title": "Step 3: Starting Balance",
     "step3Body": "Set your initial balance. Suggested: R$ {{balance}}.",
+    "step3Button": "Save balance",
     "step4Title": "Step 4: Guided Log",
     "step4Subtitle": "Your first transaction",
     "step4Body": "Log your first expense to earn XP and gold.",
-    "step4Button": "Start Logging"
+    "step4Button": "Start Logging",
+    "invalidBalance": "Enter a valid starting balance.",
+    "initialized": "Balance saved. Accounts created."
   },
   "transactions": {
     "title": "Coin Ledger",
     "subtitle": "Keypad logging with instant XP + gold rewards.",
     "quickAdd": "Quick Add",
     "manualLogging": "Manual logging",
+    "kind": "Type",
+    "expense": "Expense",
+    "income": "Income",
     "amount": "Amount (R$)",
+    "date": "Date",
     "category": "Category",
     "note": "Note",
     "logEarn": "Log & Earn",
@@ -111,7 +127,8 @@
     "recentLogs": "Recent Logs",
     "latestTransactions": "Latest transactions",
     "manualNote": "Manual log",
-    "clink": "+XP · +Gold"
+    "clink": "+XP · +Gold",
+    "invalidAmount": "Enter a valid amount."
   },
   "missions": {
     "title": "Contracts",
@@ -122,10 +139,14 @@
     "add": "Add Mission",
     "active": "Active Contracts",
     "progress": "Progress tracker",
+    "contribution": "Deposit amount (R$)",
+    "deposit": "Deposit",
     "complete": "Complete",
     "completed": "Completed",
     "toast": "Contract honored! Banner raised.",
-    "newMission": "New Mission"
+    "newMission": "New Mission",
+    "invalidTarget": "Set a valid target amount.",
+    "invalidContribution": "Enter a valid deposit amount."
   },
   "budgets": {
     "title": "Monthly Quests",
