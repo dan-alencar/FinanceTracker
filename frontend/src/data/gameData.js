@@ -40,7 +40,7 @@ export const shopItems = [
     category: "Weapon",
     slot: "tool",
     price: 120,
-    assetUrl: "https://placehold.co/100x100?text=Axe"
+    assetUrl: "/assets/items/axe-skin.svg"
   },
   {
     id: "hood",
@@ -48,7 +48,7 @@ export const shopItems = [
     category: "Headgear",
     slot: "helmet",
     price: 90,
-    assetUrl: "https://placehold.co/100x100?text=Hood"
+    assetUrl: "/assets/items/hood.svg"
   },
   {
     id: "shield",
@@ -56,7 +56,7 @@ export const shopItems = [
     category: "Shield",
     slot: "tool",
     price: 140,
-    assetUrl: "https://placehold.co/100x100?text=Shield"
+    assetUrl: "/assets/items/shield.svg"
   },
   {
     id: "boots",
@@ -64,7 +64,7 @@ export const shopItems = [
     category: "Boots",
     slot: "accessory",
     price: 70,
-    assetUrl: "https://placehold.co/100x100?text=Boots"
+    assetUrl: "/assets/items/boots.svg"
   },
   {
     id: "cape",
@@ -72,7 +72,7 @@ export const shopItems = [
     category: "Cape",
     slot: "cloak",
     price: 110,
-    assetUrl: "https://placehold.co/100x100?text=Cape"
+    assetUrl: "/assets/items/cape.svg"
   },
   {
     id: "hammer",
@@ -80,7 +80,7 @@ export const shopItems = [
     category: "Weapon",
     slot: "tool",
     price: 150,
-    assetUrl: "https://placehold.co/100x100?text=Hammer"
+    assetUrl: "/assets/items/hammer.svg"
   },
   {
     id: "pet",
@@ -88,7 +88,7 @@ export const shopItems = [
     category: "Companion",
     slot: "accessory",
     price: 200,
-    assetUrl: "https://placehold.co/100x100?text=Pet"
+    assetUrl: "/assets/items/pet.svg"
   },
   {
     id: "ring",
@@ -96,7 +96,7 @@ export const shopItems = [
     category: "Accessory",
     slot: "accessory",
     price: 60,
-    assetUrl: "https://placehold.co/100x100?text=Ring"
+    assetUrl: "/assets/items/ring.svg"
   },
   {
     id: "gloves",
@@ -104,7 +104,7 @@ export const shopItems = [
     category: "Gloves",
     slot: "accessory",
     price: 80,
-    assetUrl: "https://placehold.co/100x100?text=Gloves"
+    assetUrl: "/assets/items/gloves.svg"
   },
   {
     id: "banner",
@@ -112,7 +112,7 @@ export const shopItems = [
     category: "Decoration",
     slot: "background",
     price: 130,
-    assetUrl: "https://placehold.co/100x100?text=Banner"
+    assetUrl: "/assets/items/banner.svg"
   }
 ];
 

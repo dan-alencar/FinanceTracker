@@ -19,13 +19,17 @@ app.use(morgan("dev"));
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 const adminKey = process.env.ADMIN_API_KEY;
-const supabase = supabaseUrl && supabaseServiceKey
+const supabaseAdmin = supabaseUrl && supabaseServiceKey
   ? createClient(supabaseUrl, supabaseServiceKey)
+  : null;
+const supabasePublic = supabaseUrl && supabaseAnonKey
+  ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
 const requireSupabase = (res) => {
-  if (!supabase) {
+  if (!supabaseAdmin) {
     res.status(501).json({
       error: "Supabase is not configured. Provide SUPABASE_URL and SUPABASE_SERVICE_KEY."
     });
@@ -34,13 +38,35 @@ const requireSupabase = (res) => {
   return true;
 };
 
-const requireUser = (req, res) => {
-  const userId = req.header("x-user-id");
-  if (!userId) {
-    res.status(400).json({ error: "x-user-id header required" });
+const createUserClient = (token) =>
+  createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  });
+
+const getUserClient = async (req, res) => {
+  if (!requireSupabase(res)) return null;
+  if (!supabaseAnonKey) {
+    res.status(501).json({ error: "SUPABASE_ANON_KEY is required for user sessions." });
     return null;
   }
-  return userId;
+  const authHeader = req.header("authorization") || "";
+  const token = authHeader.startsWith("Bearer ")
+    ? authHeader.replace("Bearer ", "").trim()
+    : null;
+  if (!token) {
+    res.status(401).json({ error: "Authorization token required." });
+    return null;
+  }
+  const { data, error } = await supabaseAdmin.auth.getUser(token);
+  if (error || !data?.user) {
+    res.status(401).json({ error: "Invalid auth token." });
+    return null;
+  }
+  return { user: data.user, client: createUserClient(token) };
 };
 
 const requireAdmin = (req, res) => {
@@ -56,8 +82,8 @@ const requireAdmin = (req, res) => {
   return true;
 };
 
-const getUserTimezone = async (userId) => {
-  const { data } = await supabase
+const getUserTimezone = async (client, userId) => {
+  const { data } = await client
     .from("profiles")
     .select("settings, timezone")
     .eq("id", userId)
@@ -70,17 +96,18 @@ app.get("/health", (_req, res) => {
 });
 
 app.get("/me", async (req, res) => {
-  if (!requireSupabase(res)) return;
-  const userId = requireUser(req, res);
-  if (!userId) return;
+  const session = await getUserClient(req, res);
+  if (!session) return;
+  const { user, client } = session;
+  const userId = user.id;
 
-  const { data: profile, error: profileError } = await supabase
+  const { data: profile, error: profileError } = await client
     .from("profiles")
     .select("*")
     .eq("id", userId)
     .single();
 
-  const { data: gameState } = await supabase
+  const { data: gameState } = await client
     .from("game_state")
     .select("*")
     .eq("user_id", userId)
@@ -95,12 +122,13 @@ app.get("/me", async (req, res) => {
 });
 
 app.patch("/me/settings", async (req, res) => {
-  if (!requireSupabase(res)) return;
-  const userId = requireUser(req, res);
-  if (!userId) return;
+  const session = await getUserClient(req, res);
+  if (!session) return;
+  const { user, client } = session;
+  const userId = user.id;
 
   const { settings } = req.body;
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("profiles")
     .update({ settings })
     .eq("id", userId)
@@ -116,17 +144,18 @@ app.patch("/me/settings", async (req, res) => {
 });
 
 app.post("/avatar", async (req, res) => {
-  if (!requireSupabase(res)) return;
-  const userId = requireUser(req, res);
-  if (!userId) return;
+  const session = await getUserClient(req, res);
+  if (!session) return;
+  const { user, client } = session;
+  const userId = user.id;
 
-  const { classId, appearanceId, startingBalance } = req.body;
-  const { data, error } = await supabase
+  const { classId, appearanceId, startingBalanceCents } = req.body;
+  const { data, error } = await client
     .from("profiles")
     .update({
-      class: classId,
+      class_key: classId,
       appearance_id: appearanceId,
-      starting_balance: startingBalance
+      starting_balance_cents: startingBalanceCents
     })
     .eq("id", userId)
     .select("*")
@@ -140,63 +169,234 @@ app.post("/avatar", async (req, res) => {
   res.json({ profile: data });
 });
 
-app.post("/transactions", async (req, res) => {
-  if (!requireSupabase(res)) return;
-  const userId = requireUser(req, res);
-  if (!userId) return;
+app.post("/api/finance/initialize", async (req, res) => {
+  const session = await getUserClient(req, res);
+  if (!session) return;
+  const { client } = session;
+  const { initialBalanceCents } = req.body;
 
-  const { amount, category, occurredAt, note } = req.body;
-  const { data, error } = await supabase
-    .from("transactions")
-    .insert({
-      user_id: userId,
-      amount,
-      category,
-      occurred_at: occurredAt,
-      note
-    })
-    .select("*")
-    .single();
+  if (!Number.isFinite(initialBalanceCents) || initialBalanceCents < 0) {
+    res.status(400).json({ error: "initialBalanceCents must be >= 0" });
+    return;
+  }
+
+  const { data, error } = await client.rpc("rpc_initialize_accounts", {
+    p_initial_balance_cents: initialBalanceCents
+  });
 
   if (error) {
     res.status(400).json({ error: error.message });
     return;
   }
 
-  const timezone = await getUserTimezone(userId);
-  const gameState = await applyTransactionRewards(supabase, userId, timezone);
+  res.status(201).json({ accounts: data });
+});
 
-  const { count } = await supabase
+app.post("/api/finance/income", async (req, res) => {
+  const session = await getUserClient(req, res);
+  if (!session) return;
+  const { client } = session;
+  const { amountCents, description, occurredAt, category, clientGeneratedId } = req.body;
+
+  if (!Number.isFinite(amountCents) || amountCents <= 0) {
+    res.status(400).json({ error: "amountCents must be > 0" });
+    return;
+  }
+
+  const { data, error } = await client.rpc("rpc_create_income", {
+    p_amount_cents: amountCents,
+    p_description: description,
+    p_occurred_at: occurredAt,
+    p_category: category,
+    p_client_generated_id: clientGeneratedId
+  });
+
+  if (error) {
+    res.status(400).json({ error: error.message });
+    return;
+  }
+
+  res.status(201).json({ transaction: data });
+});
+
+app.post("/api/finance/expense", async (req, res) => {
+  const session = await getUserClient(req, res);
+  if (!session) return;
+  const { client } = session;
+  const { amountCents, description, occurredAt, category, clientGeneratedId } = req.body;
+
+  if (!Number.isFinite(amountCents) || amountCents <= 0) {
+    res.status(400).json({ error: "amountCents must be > 0" });
+    return;
+  }
+
+  const { data, error } = await client.rpc("rpc_create_expense", {
+    p_amount_cents: amountCents,
+    p_description: description,
+    p_occurred_at: occurredAt,
+    p_category: category,
+    p_client_generated_id: clientGeneratedId
+  });
+
+  if (error) {
+    res.status(400).json({ error: error.message });
+    return;
+  }
+
+  res.status(201).json({ transaction: data });
+});
+
+app.post("/api/finance/savings/deposit", async (req, res) => {
+  const session = await getUserClient(req, res);
+  if (!session) return;
+  const { client } = session;
+  const { amountCents, missionId, clientGeneratedId } = req.body;
+
+  if (!Number.isFinite(amountCents) || amountCents <= 0) {
+    res.status(400).json({ error: "amountCents must be > 0" });
+    return;
+  }
+
+  const { data, error } = await client.rpc("rpc_deposit_to_savings", {
+    p_amount_cents: amountCents,
+    p_mission_id: missionId,
+    p_client_generated_id: clientGeneratedId
+  });
+
+  if (error) {
+    res.status(400).json({ error: error.message });
+    return;
+  }
+
+  res.status(201).json({ transfer: data });
+});
+
+app.post("/api/finance/savings/withdraw", async (req, res) => {
+  const session = await getUserClient(req, res);
+  if (!session) return;
+  const { client } = session;
+  const { amountCents, clientGeneratedId } = req.body;
+
+  if (!Number.isFinite(amountCents) || amountCents <= 0) {
+    res.status(400).json({ error: "amountCents must be > 0" });
+    return;
+  }
+
+  const { data, error } = await client.rpc("rpc_withdraw_from_savings", {
+    p_amount_cents: amountCents,
+    p_client_generated_id: clientGeneratedId
+  });
+
+  if (error) {
+    res.status(400).json({ error: error.message });
+    return;
+  }
+
+  res.status(201).json({ transfer: data });
+});
+
+app.get("/api/finance/summary", async (req, res) => {
+  const session = await getUserClient(req, res);
+  if (!session) return;
+  const { user, client } = session;
+  const userId = user.id;
+
+  const { data: accounts } = await client
+    .from("accounts")
+    .select("id, name, account_type")
+    .eq("user_id", userId);
+
+  const accountIds = accounts?.map((account) => account.id) || [];
+  const balancesResponse = accountIds.length
+    ? await client
+        .from("balances")
+        .select("account_id, available_cents")
+        .in("account_id", accountIds)
+    : { data: [] };
+  const balances = balancesResponse.data;
+
+  const { data: transactions } = await client
+    .from("transactions")
+    .select("id, kind, amount_cents, category, description, occurred_at")
+    .eq("user_id", userId)
+    .order("occurred_at", { ascending: false })
+    .limit(10);
+
+  const { data: missions } = await client
+    .from("missions")
+    .select("id, title, target_cents, saved_cents, status")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  res.json({
+    balances: (accounts || []).map((account) => {
+      const balance = balances?.find((entry) => entry.account_id === account.id);
+      return {
+        ...account,
+        available_cents: balance?.available_cents ?? 0
+      };
+    }),
+    transactions: transactions || [],
+    missions: missions || []
+  });
+});
+
+app.post("/transactions", async (req, res) => {
+  const session = await getUserClient(req, res);
+  if (!session) return;
+  const { user, client } = session;
+  const userId = user.id;
+
+  const { amountCents, category, occurredAt, description, kind, clientGeneratedId } = req.body;
+  const { data, error } = await client.rpc("rpc_create_transaction", {
+    p_amount_cents: amountCents,
+    p_category: category,
+    p_description: description,
+    p_occurred_at: occurredAt,
+    p_kind: kind,
+    p_client_generated_id: clientGeneratedId
+  });
+
+  if (error) {
+    res.status(400).json({ error: error.message });
+    return;
+  }
+
+  const timezone = await getUserTimezone(client, userId);
+  const gameState = await applyTransactionRewards(client, userId, timezone);
+
+  const { count } = await client
     .from("transactions")
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId);
 
   if (count === 1) {
-    await unlockAchievement(supabase, userId, "first-log");
+    await unlockAchievement(client, userId, "first-log");
   }
 
   if (gameState?.streak_count >= 3) {
-    await unlockAchievement(supabase, userId, "steady-hand");
+    await unlockAchievement(client, userId, "steady-hand");
   }
 
   if (gameState?.streak_count >= 7) {
-    await unlockAchievement(supabase, userId, "streak-7");
+    await unlockAchievement(client, userId, "streak-7");
   }
 
   if (count >= 50) {
-    await unlockAchievement(supabase, userId, "guild-treasurer");
+    await unlockAchievement(client, userId, "guild-treasurer");
   }
 
   res.status(201).json({ transaction: data, gameState });
 });
 
 app.get("/transactions", async (req, res) => {
-  if (!requireSupabase(res)) return;
-  const userId = requireUser(req, res);
-  if (!userId) return;
+  const session = await getUserClient(req, res);
+  if (!session) return;
+  const { user, client } = session;
+  const userId = user.id;
 
   const { from, to } = req.query;
-  let query = supabase.from("transactions").select("*").eq("user_id", userId);
+  let query = client.from("transactions").select("*").eq("user_id", userId);
   if (from) query = query.gte("occurred_at", from);
   if (to) query = query.lte("occurred_at", to);
 
@@ -210,11 +410,12 @@ app.get("/transactions", async (req, res) => {
 });
 
 app.post("/missions", async (req, res) => {
-  if (!requireSupabase(res)) return;
-  const userId = requireUser(req, res);
-  if (!userId) return;
+  const session = await getUserClient(req, res);
+  if (!session) return;
+  const { user, client } = session;
+  const userId = user.id;
 
-  const { data: activeMissions } = await supabase
+  const { data: activeMissions } = await client
     .from("missions")
     .select("id")
     .eq("user_id", userId)
@@ -225,17 +426,15 @@ app.post("/missions", async (req, res) => {
     return;
   }
 
-  const { title, targetAmount, rewardXp, rewardGold } = req.body;
-  const { data, error } = await supabase
+  const { title, targetCents } = req.body;
+  const { data, error } = await client
     .from("missions")
     .insert({
       user_id: userId,
       title,
-      target_amount: targetAmount,
-      current_amount: 0,
-      status: "active",
-      reward_xp: rewardXp,
-      reward_gold: rewardGold
+      target_cents: targetCents,
+      saved_cents: 0,
+      status: "active"
     })
     .select("*")
     .single();
@@ -249,11 +448,12 @@ app.post("/missions", async (req, res) => {
 });
 
 app.get("/missions", async (req, res) => {
-  if (!requireSupabase(res)) return;
-  const userId = requireUser(req, res);
-  if (!userId) return;
+  const session = await getUserClient(req, res);
+  if (!session) return;
+  const { user, client } = session;
+  const userId = user.id;
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("missions")
     .select("*")
     .eq("user_id", userId)
@@ -268,12 +468,13 @@ app.get("/missions", async (req, res) => {
 });
 
 app.post("/missions/:id/complete", async (req, res) => {
-  if (!requireSupabase(res)) return;
-  const userId = requireUser(req, res);
-  if (!userId) return;
+  const session = await getUserClient(req, res);
+  if (!session) return;
+  const { user, client } = session;
+  const userId = user.id;
 
   const { id } = req.params;
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("missions")
     .update({ status: "completed", completed_at: new Date().toISOString() })
     .eq("id", id)
@@ -290,8 +491,11 @@ app.post("/missions/:id/complete", async (req, res) => {
 });
 
 app.get("/shop/items", async (_req, res) => {
-  if (!requireSupabase(res)) return;
-  const { data, error } = await supabase
+  if (!supabasePublic) {
+    res.status(501).json({ error: "Supabase public client not configured." });
+    return;
+  }
+  const { data, error } = await supabasePublic
     .from("shop_items")
     .select("*")
     .eq("is_active", true);
@@ -305,12 +509,13 @@ app.get("/shop/items", async (_req, res) => {
 });
 
 app.post("/shop/buy", async (req, res) => {
-  if (!requireSupabase(res)) return;
-  const userId = requireUser(req, res);
-  if (!userId) return;
+  const session = await getUserClient(req, res);
+  if (!session) return;
+  const { user, client } = session;
+  const userId = user.id;
 
   const { shopItemId } = req.body;
-  const { data: item, error: itemError } = await supabase
+  const { data: item, error: itemError } = await client
     .from("shop_items")
     .select("id, price_gold")
     .eq("id", shopItemId)
@@ -321,7 +526,7 @@ app.post("/shop/buy", async (req, res) => {
     return;
   }
 
-  const { data: gameState } = await supabase
+  const { data: gameState } = await client
     .from("game_state")
     .select("gold")
     .eq("user_id", userId)
@@ -332,7 +537,7 @@ app.post("/shop/buy", async (req, res) => {
     return;
   }
 
-  const { data: inventoryItem, error: inventoryError } = await supabase
+  const { data: inventoryItem, error: inventoryError } = await client
     .from("inventory")
     .insert({ user_id: userId, shop_item_id: shopItemId })
     .select("*")
@@ -343,31 +548,32 @@ app.post("/shop/buy", async (req, res) => {
     return;
   }
 
-  await supabase.from("purchases").insert({ user_id: userId, shop_item_id: shopItemId });
+  await client.from("purchases").insert({ user_id: userId, shop_item_id: shopItemId });
 
-  await supabase
+  await client
     .from("game_state")
     .update({ gold: gameState.gold - item.price_gold })
     .eq("user_id", userId);
 
-  const { count } = await supabase
+  const { count } = await client
     .from("inventory")
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId);
 
   if (count >= 5) {
-    await unlockAchievement(supabase, userId, "armory-collector");
+    await unlockAchievement(client, userId, "armory-collector");
   }
 
   res.status(201).json({ inventory: inventoryItem });
 });
 
 app.get("/counselor/messages", async (req, res) => {
-  if (!requireSupabase(res)) return;
-  const userId = requireUser(req, res);
-  if (!userId) return;
+  const session = await getUserClient(req, res);
+  if (!session) return;
+  const { user, client } = session;
+  const userId = user.id;
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("counselor_messages")
     .select("*")
     .eq("user_id", userId)
@@ -382,12 +588,13 @@ app.get("/counselor/messages", async (req, res) => {
 });
 
 app.post("/counselor/messages/:id/read", async (req, res) => {
-  if (!requireSupabase(res)) return;
-  const userId = requireUser(req, res);
-  if (!userId) return;
+  const session = await getUserClient(req, res);
+  if (!session) return;
+  const { user, client } = session;
+  const userId = user.id;
 
   const { id } = req.params;
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("counselor_messages")
     .update({ read_at: new Date().toISOString() })
     .eq("id", id)
@@ -408,7 +615,7 @@ app.post("/admin/counselor/send", async (req, res) => {
   if (!requireAdmin(req, res)) return;
 
   const { userId, title, body, adminId } = req.body;
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("counselor_messages")
     .insert({
       user_id: userId,
@@ -433,7 +640,7 @@ app.post("/events", async (req, res) => {
   const userId = req.body.userId || null;
   const { name, props } = req.body;
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("events")
     .insert({
       user_id: userId,
@@ -451,10 +658,10 @@ app.post("/events", async (req, res) => {
   res.status(201).json({ event: data });
 });
 
-app.use("/budgets", createBudgetsRouter({ supabase }));
-app.use("/", createInventoryRouter({ supabase }));
-app.use("/stats", createStatsRouter({ supabase }));
-app.use("/achievements", createAchievementsRouter({ supabase }));
+app.use("/budgets", createBudgetsRouter({ supabase: supabaseAdmin }));
+app.use("/", createInventoryRouter({ supabase: supabaseAdmin }));
+app.use("/stats", createStatsRouter({ supabase: supabaseAdmin }));
+app.use("/achievements", createAchievementsRouter({ supabase: supabaseAdmin }));
 
 app.listen(PORT, () => {
   console.log(`Dwarven Guild backend running on ${PORT}`);
