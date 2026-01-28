@@ -1,6 +1,7 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "./LanguageToggle";
+import { supabase } from "../lib/supabaseClient";
 import "../styles/navigation.css";
 
 const links = [
@@ -18,6 +19,15 @@ const links = [
 
 export default function Navigation() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    localStorage.removeItem("dg_demo");
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+    navigate("/login", { replace: true });
+  };
 
   return (
     <nav className="nav">
@@ -31,6 +41,9 @@ export default function Navigation() {
             {t(link.labelKey)}
           </NavLink>
         ))}
+        <button type="button" className="nav-link nav-logout" onClick={handleLogout}>
+          {t("nav.logout")}
+        </button>
       </div>
     </nav>
   );

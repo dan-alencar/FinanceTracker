@@ -45,6 +45,12 @@
   color: var(--accent);
 }
 
+.nav-logout {
+  background: #1b2235;
+  border: 1px solid #2a314a;
+  color: #fca5a5;
+}
+
 .lang-toggle {
   display: inline-flex;
   align-items: center;
