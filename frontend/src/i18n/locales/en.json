@@ -11,6 +11,7 @@
     "inbox": "Raven Post",
     "admin": "War Room",
     "logout": "Log out"
+    "admin": "War Room"
   },
   "login": {
     "title": "Enter the Guild",
