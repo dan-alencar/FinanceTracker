@@ -25,7 +25,7 @@
     "error": "Unable to start login. Try again.",
     "missingSupabase": "Supabase is not configured for this environment.",
     "missingFields": "Email and password are required.",
-    "signupSuccess": "Account created. Check your inbox to confirm."
+    "signupSuccess": "Account created. Check your inbox to confirm.",
     "pitchTitle": "Dwarven Guild",
     "pitchSubtitle": "Pitch-ready auth flow",
     "pitchBulletOne": "XP and gold tied to verified sessions.",
