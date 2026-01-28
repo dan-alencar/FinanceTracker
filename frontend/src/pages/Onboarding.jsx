@@ -1,19 +1,19 @@
 import Card from "../components/Card";
 import { classes, appearances } from "../data/gameData";
 import { useGameStore } from "../store/useGameStore";
+import { useTranslation } from "react-i18next";
 
 export default function Onboarding() {
+  const { t } = useTranslation();
   const { profile } = useGameStore();
 
   return (
     <div>
-      <h1 className="page-title">Primeira Expedição</h1>
-      <p className="subtitle">
-        Follow the onboarding path to forge your guild identity.
-      </p>
+      <h1 className="page-title">{t("onboarding.title")}</h1>
+      <p className="subtitle">{t("onboarding.subtitle")}</p>
 
       <div className="grid grid-2">
-        <Card title="Step 1: Choose Class" subtitle="Three playable classes">
+        <Card title={t("onboarding.step1Title")} subtitle={t("onboarding.step1Subtitle")}>
           {classes.map((entry) => (
             <div key={entry.id} className="tag">
               <strong>{entry.name}</strong> · {entry.description}
@@ -21,7 +21,7 @@ export default function Onboarding() {
           ))}
         </Card>
 
-        <Card title="Step 2: Customize" subtitle="Five appearances">
+        <Card title={t("onboarding.step2Title")} subtitle={t("onboarding.step2Subtitle")}>
           <div className="list">
             {appearances.map((entry) => (
               <span key={entry.id} className="tag">
@@ -33,16 +33,16 @@ export default function Onboarding() {
       </div>
 
       <div className="grid grid-2" style={{ marginTop: "24px" }}>
-        <Card title="Step 3: Starting Balance">
+        <Card title={t("onboarding.step3Title")}>
           <p>
-            Set your initial balance. Suggested: R$ {profile.startingBalance}.
+            {t("onboarding.step3Body", { balance: profile.startingBalance })}
           </p>
           <input className="input" value={profile.startingBalance} readOnly />
         </Card>
 
-        <Card title="Step 4: Guided Log" subtitle="Your first transaction">
-          <p>Log your first expense to earn XP and gold.</p>
-          <button className="button">Start Logging</button>
+        <Card title={t("onboarding.step4Title")} subtitle={t("onboarding.step4Subtitle")}>
+          <p>{t("onboarding.step4Body")}</p>
+          <button className="button">{t("onboarding.step4Button")}</button>
         </Card>
       </div>
     </div>

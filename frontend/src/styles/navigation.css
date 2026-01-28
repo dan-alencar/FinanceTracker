@@ -11,6 +11,12 @@
   border-bottom: 1px solid rgba(184, 121, 61, 0.25);
 }
 
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .nav-brand {
   font-weight: 700;
   font-size: 20px;
@@ -36,5 +42,36 @@
 .nav-link.active {
   background: #1f2538;
   border-color: #2a314a;
+  color: var(--accent);
+}
+
+.nav-logout {
+  background: #1b2235;
+  border: 1px solid #2a314a;
+  color: #fca5a5;
+}
+
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: #141a2b;
+  border-radius: 999px;
+  border: 1px solid #2a314a;
+  padding: 4px;
+  gap: 4px;
+}
+
+.lang-option {
+  border: none;
+  background: transparent;
+  color: #cbd5f5;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.lang-option.active {
+  background: #262c43;
   color: var(--accent);
 }

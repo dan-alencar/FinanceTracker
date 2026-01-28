@@ -4,8 +4,10 @@ import CategoryIcon from "../components/CategoryIcon";
 import { categories } from "../data/gameData";
 import { getTodayString } from "../lib/dateUtils";
 import { useGameStore } from "../store/useGameStore";
+import { useTranslation } from "react-i18next";
 
 export default function Transactions() {
+  const { t } = useTranslation();
   const { addTransaction, transactions, settings, toggleSound } = useGameStore();
   const [amount, setAmount] = useState("20");
   const [category, setCategory] = useState(categories[0]);
@@ -23,7 +25,7 @@ export default function Transactions() {
       amount: -Math.abs(Number(amount) || 0),
       category,
       occurredAt: getTodayString(settings.timezone),
-      note: note || "Manual log"
+      note: note || t("transactions.manualNote")
     });
     setNote("");
     if (!settings.discreteMode) {
@@ -34,18 +36,18 @@ export default function Transactions() {
 
   return (
     <div>
-      <h1 className="page-title">Coin Ledger</h1>
-      <p className="subtitle">Keypad logging with instant XP + gold rewards.</p>
+      <h1 className="page-title">{t("transactions.title")}</h1>
+      <p className="subtitle">{t("transactions.subtitle")}</p>
 
       <div className="grid grid-2">
-        <Card title="Quick Add" subtitle="Manual logging">
-          <label className="tag">Amount (R$)</label>
+        <Card title={t("transactions.quickAdd")} subtitle={t("transactions.manualLogging")}>
+          <label className="tag">{t("transactions.amount")}</label>
           <input
             className="input"
             value={amount}
             onChange={(event) => setAmount(event.target.value)}
           />
-          <label className="tag">Category</label>
+          <label className="tag">{t("transactions.category")}</label>
           <select
             className="input"
             value={category}
@@ -57,24 +59,28 @@ export default function Transactions() {
               </option>
             ))}
           </select>
-          <label className="tag">Note</label>
+          <label className="tag">{t("transactions.note")}</label>
           <input
             className="input"
             value={note}
             onChange={(event) => setNote(event.target.value)}
           />
           <button className="button" onClick={handleLog}>
-            Log & Earn
+            {t("transactions.logEarn")}
           </button>
           <button className="button secondary" onClick={toggleSound}>
-            Sound: {settings.soundOn ? "On" : "Off"}
+            {t("transactions.sound", {
+              state: settings.soundOn
+                ? t("transactions.soundOn")
+                : t("transactions.soundOff")
+            })}
           </button>
           {showClink && !settings.discreteMode && (
-            <div className="clink">+XP · +Gold</div>
+            <div className="clink">{t("transactions.clink")}</div>
           )}
         </Card>
 
-        <Card title="Recent Logs" subtitle="Latest transactions">
+        <Card title={t("transactions.recentLogs")} subtitle={t("transactions.latestTransactions")}>
           <div className="list">
             {sorted.map((tx) => (
               <div key={tx.id} className="tag">
