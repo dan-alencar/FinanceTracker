@@ -27,11 +27,22 @@ const supabaseAdmin = supabaseUrl && supabaseServiceKey
 const supabasePublic = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
+const supabaseService = supabaseAdmin || supabasePublic;
 
 const requireSupabase = (res) => {
+  if (!supabaseService) {
+    res.status(501).json({
+      error: "Supabase is not configured. Provide SUPABASE_URL and a service or anon key."
+    });
+    return false;
+  }
+  return true;
+};
+
+const requireSupabaseAdmin = (res) => {
   if (!supabaseAdmin) {
     res.status(501).json({
-      error: "Supabase is not configured. Provide SUPABASE_URL and SUPABASE_SERVICE_KEY."
+      error: "Supabase service key is required for this endpoint."
     });
     return false;
   }
@@ -61,7 +72,8 @@ const getUserClient = async (req, res) => {
     res.status(401).json({ error: "Authorization token required." });
     return null;
   }
-  const { data, error } = await supabaseAdmin.auth.getUser(token);
+  const authClient = supabaseAdmin || supabasePublic;
+  const { data, error } = await authClient.auth.getUser(token);
   if (error || !data?.user) {
     res.status(401).json({ error: "Invalid auth token." });
     return null;
@@ -611,7 +623,7 @@ app.post("/counselor/messages/:id/read", async (req, res) => {
 });
 
 app.post("/admin/counselor/send", async (req, res) => {
-  if (!requireSupabase(res)) return;
+  if (!requireSupabaseAdmin(res)) return;
   if (!requireAdmin(req, res)) return;
 
   const { userId, title, body, adminId } = req.body;
@@ -636,7 +648,7 @@ app.post("/admin/counselor/send", async (req, res) => {
 });
 
 app.post("/events", async (req, res) => {
-  if (!requireSupabase(res)) return;
+  if (!requireSupabaseAdmin(res)) return;
   const userId = req.body.userId || null;
   const { name, props } = req.body;
 
@@ -658,10 +670,10 @@ app.post("/events", async (req, res) => {
   res.status(201).json({ event: data });
 });
 
-app.use("/budgets", createBudgetsRouter({ supabase: supabaseAdmin }));
-app.use("/", createInventoryRouter({ supabase: supabaseAdmin }));
-app.use("/stats", createStatsRouter({ supabase: supabaseAdmin }));
-app.use("/achievements", createAchievementsRouter({ supabase: supabaseAdmin }));
+app.use("/budgets", createBudgetsRouter({ supabase: supabaseService }));
+app.use("/", createInventoryRouter({ supabase: supabaseService }));
+app.use("/stats", createStatsRouter({ supabase: supabaseService }));
+app.use("/achievements", createAchievementsRouter({ supabase: supabaseService }));
 
 app.listen(PORT, () => {
   console.log(`Dwarven Guild backend running on ${PORT}`);

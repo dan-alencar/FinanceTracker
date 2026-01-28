@@ -91,7 +91,11 @@ export default function Login() {
   };
 
   const handleDemo = () => {
+    const demoEmail = "demo@dwarvenguild.local";
+    setError("");
     localStorage.setItem("dg_demo", "true");
+    localStorage.setItem("dg_demo_user", demoEmail);
+    setStatus(t("login.demoAuth"));
     navigate("/dashboard", { replace: true });
   };
 
