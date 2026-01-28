@@ -23,6 +23,7 @@ export default function Navigation() {
 
   const handleLogout = async () => {
     localStorage.removeItem("dg_demo");
+    localStorage.removeItem("dg_demo_user");
     if (supabase) {
       await supabase.auth.signOut();
     }

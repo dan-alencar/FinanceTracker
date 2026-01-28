@@ -28,4 +28,13 @@ npm install
 npm run dev
 ```
 
-The backend expects `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` in the `.env`.
+The backend expects `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, and `SUPABASE_ANON_KEY` in the `.env`.
+
+### Supabase configuration
+
+Fill in the Supabase values in both `frontend/.env` and `backend/.env`:
+
+- Frontend: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_API_URL`
+- Backend: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_ANON_KEY`
+
+With these set, email/password auth will use Supabase instead of the demo fallback.

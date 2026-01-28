@@ -48,7 +48,27 @@ export default function Login() {
     setStatus("");
     localStorage.removeItem("dg_demo");
     if (!supabase) {
-      setError(t("login.missingSupabase"));
+      if (!email || !password) {
+        setError(t("login.missingFields"));
+        return;
+      }
+      const stored = JSON.parse(localStorage.getItem("dg_demo_users") || "[]");
+      const existing = stored.find((user) => user.email === email);
+      if (mode === "signup") {
+        if (existing) {
+          setError(t("login.userExists"));
+          return;
+        }
+        stored.push({ email, password });
+        localStorage.setItem("dg_demo_users", JSON.stringify(stored));
+      } else if (!existing || existing.password !== password) {
+        setError(t("login.invalidCredentials"));
+        return;
+      }
+      localStorage.setItem("dg_demo_user", email);
+      localStorage.setItem("dg_demo", "true");
+      setStatus(t("login.demoAuth"));
+      navigate(getPostLoginRoute(profile), { replace: true });
       return;
     }
     if (!email || !password) {
